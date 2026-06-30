@@ -41,7 +41,7 @@
 </head>
 <body>
 
-<div class="navbar">
+<div class="navbar" id="navbar">
     <div class="nav-item active" onclick="switchPage('102')">102</div>
     <div class="nav-item" onclick="switchPage('201')">201</div>
     <div class="nav-item" onclick="switchPage('202')">202</div>
@@ -77,8 +77,7 @@ const roomConfigs = {
 };
 const rooms = Object.keys(roomConfigs);
 
-// 初始化執行
-setTimeout(() => {
+window.onload = function() {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('endDate').value = today;
     const lastMonth = new Date();
@@ -88,7 +87,7 @@ setTimeout(() => {
     renderRoomPages();
     loadAllHistories();
     update202Info();
-}, 100);
+};
 
 function get202Rate() {
     const endDateVal = document.getElementById('endDate').value;
@@ -97,9 +96,12 @@ function get202Rate() {
     return [6, 7, 8, 9].includes(month) ? 5.5 : 5.0;
 }
 
+// 動態更新 202 畫面的電費費率
 function update202Info() {
     const rateSpan = document.getElementById('rate-val-202');
-    if (rateSpan) { rateSpan.innerText = get202Rate(); }
+    if (rateSpan) {
+        rateSpan.innerText = get202Rate();
+    }
 }
 
 function renderRoomPages() {
@@ -112,7 +114,7 @@ function renderRoomPages() {
         
         let infoHTML = `📌 <b>${room}房 固定月租：</b> ${rentAmount.toLocaleString()} 元 / 月<br>💧 <b>自來水費：</b> 100 元 × 人數`;
         if (room === '202') {
-            infoHTML = `📌 <b>202房 固定月租：</b> 6,000 元 / 月<br>⚡ <b>目前電費：</b> <span id="rate-val-202">5.5</span> 元 / 度 (6-9月5.5，其餘5元)<br>💧 <b>自來水費：</b> 100 元 × 人數`;
+            infoHTML = `📌 <b>202房 固定月租：</b> 6,000 元 / 月<br>⚡ <b>目前電費：</b> <span id="rate-val-202">5.5</span> 元 / 度 (6-9月為5.5，其餘5元)<br>💧 <b>自來水費：</b> 100 元 × 人數`;
         }
 
         container.innerHTML += `
@@ -159,10 +161,12 @@ function calculateAndSave(room) {
 
     const degrees = curr - prev;
     const rate = room === '202' ? get202Rate() : 5.5;
-    const electricityPay = Math.round(degrees * rate);
+    
+    // 💡 調整核心：使用 Math.floor() 進行電費與最後總額的無條件捨去
+    const electricityPay = Math.floor(degrees * rate);
     const rentPay = roomConfigs[room].rent;
     const waterPay = people * 100;
-    const finalPay = electricityPay + rentPay + waterPay;
+    const finalPay = Math.floor(electricityPay + rentPay + waterPay);
     
     document.getElementById(`total-${room}`).innerText = finalPay.toLocaleString();
 
@@ -172,7 +176,8 @@ function calculateAndSave(room) {
     localStorage.setItem(`history_v6_${room}`, JSON.stringify(history));
     updateRoomTableDOM(room, history);
 
-    const message = `📋 ${room} 房每月應繳帳單\n--------------------\n【計費期間】${dateText}\n【前期度數】${prev.toFixed(1)} 度\n【本期度數】${curr.toFixed(1)} 度\n【實用度數】${degrees.toFixed(1)} 度\n【電費小計】$ ${electricityPay.toLocaleString()} 元 (${rate}元/度)\n【房屋租金】$ ${rentPay.toLocaleString()} 元\n【自來水費】$ ${waterPay.toLocaleString()} 元 (${people}人 × 100元)\n--------------------\n🔥【應繳總計】NT$ ${finalPay.toLocaleString()} 元\n--------------------\n*(請確認明細無誤後繳納，謝謝您！)*`;
+    // LINE 訊息組裝
+    const message = `📋 ${room} 房每月應繳帳單\n--------------------\n【計費期間】${dateText}\n【前期度數】${prev.toFixed(1)} 度 (舊)\n【本期度數】${curr.toFixed(1)} 度 (新)\n【實用度數】${degrees.toFixed(1)} 度\n【電費小計】$ ${electricityPay.toLocaleString()} 元 (${rate}元/度)\n【房屋租金】$ ${rentPay.toLocaleString()} 元\n【自來水費】$ ${waterPay.toLocaleString()} 元 (${people}人 × 100元)\n--------------------\n🔥【應繳總計】NT$ ${finalPay.toLocaleString()} 元\n--------------------\n*(請確認明細無誤後繳納，謝謝您！)*`;
     
     const lineBtn = document.getElementById(`line-btn-${room}`);
     lineBtn.href = `https://line.me/R/msg/text/?${encodeURIComponent(message)}`;
@@ -202,6 +207,7 @@ function deleteSingleRecord(room, recordId) {
     }
 }
 
+// 變更資料庫版本識別碼為 v6，確保新舊計算不衝突
 function loadAllHistories() { rooms.forEach(room => updateRoomTableDOM(room, JSON.parse(localStorage.getItem(`history_v6_${room}`)) || [])); }
 function clearHistory(room) { if (confirm('確定要清空此房歷史紀錄？')) { localStorage.removeItem(`history_v6_${room}`); updateRoomTableDOM(room, []); document.getElementById(`line-btn-${room}`).style.display = 'none'; } }
 </script>
