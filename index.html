@@ -89,6 +89,7 @@ window.onload = function() {
     update202Info();
 };
 
+// 確保回傳數字格式
 function get202Rate() {
     const endDateVal = document.getElementById('endDate').value;
     if (!endDateVal) return 5.5;
@@ -96,12 +97,16 @@ function get202Rate() {
     return [6, 7, 8, 9].includes(month) ? 5.5 : 5.0;
 }
 
-// 動態更新 202 畫面的電費費率
 function update202Info() {
     const rateSpan = document.getElementById('rate-val-202');
     if (rateSpan) {
         rateSpan.innerText = get202Rate();
     }
+}
+
+function formatCurrency(val) {
+    // 💡 核心修正：格式化前先強制取整數，阻斷 toLocaleString 的隱藏四捨五入
+    return Math.floor(val).toLocaleString();
 }
 
 function renderRoomPages() {
@@ -162,22 +167,23 @@ function calculateAndSave(room) {
     const degrees = curr - prev;
     const rate = room === '202' ? get202Rate() : 5.5;
     
-    // 💡 調整核心：使用 Math.floor() 進行電費與最後總額的無條件捨去
+    // 💡 雙重保險：計算時直接用 Math.floor 砍掉小數點
     const electricityPay = Math.floor(degrees * rate);
     const rentPay = roomConfigs[room].rent;
     const waterPay = people * 100;
     const finalPay = Math.floor(electricityPay + rentPay + waterPay);
     
-    document.getElementById(`total-${room}`).innerText = finalPay.toLocaleString();
+    // 渲染畫面：使用新寫的 formatCurrency 函數
+    document.getElementById(`total-${room}`).innerText = formatCurrency(finalPay);
 
     const newRecord = { id: Date.now(), dateText: dateShort, degrees: degrees.toFixed(1), totalPay: finalPay };
-    let history = JSON.parse(localStorage.getItem(`history_v6_${room}`)) || [];
+    let history = JSON.parse(localStorage.getItem( `history_v7_${room}`)) || [];
     history.unshift(newRecord);
-    localStorage.setItem(`history_v6_${room}`, JSON.stringify(history));
+    localStorage.setItem(`history_v7_${room}`, JSON.stringify(history));
     updateRoomTableDOM(room, history);
 
     // LINE 訊息組裝
-    const message = `📋 ${room} 房每月應繳帳單\n--------------------\n【計費期間】${dateText}\n【前期度數】${prev.toFixed(1)} 度 (舊)\n【本期度數】${curr.toFixed(1)} 度 (新)\n【實用度數】${degrees.toFixed(1)} 度\n【電費小計】$ ${electricityPay.toLocaleString()} 元 (${rate}元/度)\n【房屋租金】$ ${rentPay.toLocaleString()} 元\n【自來水費】$ ${waterPay.toLocaleString()} 元 (${people}人 × 100元)\n--------------------\n🔥【應繳總計】NT$ ${finalPay.toLocaleString()} 元\n--------------------\n*(請確認明細無誤後繳納，謝謝您！)*`;
+    const message = `📋 ${room} 房每月應繳帳單\n--------------------\n【計費期間】${dateText}\n【前期度數】${prev.toFixed(1)} 度 (舊)\n【本期度數】${curr.toFixed(1)} 度 (新)\n【實用度數】${degrees.toFixed(1)} 度\n【電費小計】$ ${formatCurrency(electricityPay)} 元 (${rate}元/度)\n【房屋租金】$ ${formatCurrency(rentPay)} 元\n【自來水費】$ ${formatCurrency(waterPay)} 元 (${people}人 × 100元)\n--------------------\n🔥【應繳總計】NT$ ${formatCurrency(finalPay)} 元\n--------------------\n*(請確認明細無誤後繳納，謝謝您！)*`;
     
     const lineBtn = document.getElementById(`line-btn-${room}`);
     lineBtn.href = `https://line.me/R/msg/text/?${encodeURIComponent(message)}`;
@@ -194,22 +200,22 @@ function updateRoomTableDOM(room, history) {
     if (history.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="color:#94a3b8;">暫無紀錄</td></tr>`; return; }
     tbody.innerHTML = '';
     history.forEach(item => {
-        tbody.innerHTML += `<tr><td>${item.dateText}</td><td>${item.degrees}度</td><td style="font-weight:bold;color:#dc2626;">$${item.totalPay.toLocaleString()}</td><td><button class="btn-delete-row" onclick="deleteSingleRecord('${room}', ${item.id})">🗑️</button></td></tr>`;
+        tbody.innerHTML += `<tr><td>${item.dateText}</td><td>${item.degrees}度</td><td style="font-weight:bold;color:#dc2626;">$${formatCurrency(item.totalPay)}</td><td><button class="btn-delete-row" onclick="deleteSingleRecord('${room}', ${item.id})">🗑️</button></td></tr>`;
     });
 }
 
 function deleteSingleRecord(room, recordId) {
     if (confirm('確定要刪除這筆紀錄嗎？')) {
-        let history = JSON.parse(localStorage.getItem(`history_v6_${room}`)) || [];
+        let history = JSON.parse(localStorage.getItem(`history_v7_${room}`)) || [];
         history = history.filter(item => item.id !== recordId);
-        localStorage.setItem(`history_v6_${room}`, JSON.stringify(history));
+        localStorage.setItem(`history_v7_${room}`, JSON.stringify(history));
         updateRoomTableDOM(room, history);
     }
 }
 
-// 變更資料庫版本識別碼為 v6，確保新舊計算不衝突
-function loadAllHistories() { rooms.forEach(room => updateRoomTableDOM(room, JSON.parse(localStorage.getItem(`history_v6_${room}`)) || [])); }
-function clearHistory(room) { if (confirm('確定要清空此房歷史紀錄？')) { localStorage.removeItem(`history_v6_${room}`); updateRoomTableDOM(room, []); document.getElementById(`line-btn-${room}`).style.display = 'none'; } }
+// 變更資料庫識別碼至 v7，強制重整舊緩存引起的四捨五入顯示問題
+function loadAllHistories() { rooms.forEach(room => updateRoomTableDOM(room, JSON.parse(localStorage.getItem(`history_v7_${room}`)) || [])); }
+function clearHistory(room) { if (confirm('確定要清空此房歷史紀錄？')) { localStorage.removeItem(`history_v7_${room}`); updateRoomTableDOM(room, []); document.getElementById(`line-btn-${room}`).style.display = 'none'; } }
 </script>
 </body>
 </html>
