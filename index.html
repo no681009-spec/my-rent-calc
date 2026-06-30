@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>套房財務管理系統</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f4f6f9; padding: 0; margin: 0; display: flex; flex-direction: column; align-items: center; }
+        .navbar { background-color: #1e3a8a; width: 100%; display: flex; justify-content: space-around; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+        .nav-item { color: #93c5fd; padding: 15px 10px; text-decoration: none; font-weight: bold; font-size: 16px; flex: 1; text-align: center; border-bottom: 3px solid transparent; cursor: pointer; }
+        .nav-item.active { color: #ffffff; border-bottom: 3px solid #3b82f6; background-color: #1e40af; }
+        .container { background: white; padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); width: 100%; max-width: 480px; box-sizing: border-box; margin: 20px 10px; }
+        h2 { text-align: center; color: #1e293b; margin: 0 0 5px 0; font-size: 24px; }
+        .sub-title { text-align: center; color: #64748b; font-size: 14px; margin-bottom: 20px; }
+        .date-section { background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 10px; }
+        .date-group { flex: 1; }
+        .date-group label { display: block; font-size: 12px; font-weight: bold; color: #64748b; margin-bottom: 4px; }
+        .date-group input { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+        .room-page { display: none; }
+        .room-page.active { display: block; }
+        .room-title-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 15px; }
+        .room-title { font-size: 22px; font-weight: bold; color: #1e3a8a; }
+        .fixed-cost-box { background-color: #f0fdf4; border: 1px dashed #bbf7d0; border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; font-size: 14px; color: #166534; }
+        .input-group { margin-bottom: 16px; }
+        .input-group label { display: block; font-size: 14px; font-weight: 600; color: #475569; margin-bottom: 6px; }
+        .input-group input { width: 100%; padding: 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        .action-panel { background: #f8fafc; padding: 16px; border-radius: 12px; margin-bottom: 20px; text-align: center; }
+        .bill-display { font-size: 15px; color: #475569; margin-bottom: 12px; }
+        .room-res-val { font-weight: bold; color: #dc2626; font-size: 24px; }
+        button { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .btn-calc { background-color: #3b82f6; color: white; margin-bottom: 10px; }
+        .btn-line { background-color: #06c755; color: white; display: none; text-decoration: none; box-sizing: border-box; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: bold; text-align: center; }
+        .history-section { margin-top: 25px; }
+        .history-title { font-size: 14px; font-weight: bold; color: #475569; margin-bottom: 8px; }
+        .history-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; }
+        .history-table th, .history-table td { padding: 8px 4px; border: 1px solid #e2e8f0; }
+        .history-table th { background-color: #f1f5f9; color: #475569; font-weight: 600; }
+        .btn-delete-row { background: none; border: none; color: #ef4444; font-size: 16px; cursor: pointer; padding: 0; width: auto; }
+        .btn-clear { background: none; border: none; color: #ef4444; font-size: 12px; cursor: pointer; text-decoration: underline; padding: 0;}
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <div class="nav-item active" onclick="switchPage('102')">102</div>
+    <div class="nav-item" onclick="switchPage('201')">201</div>
+    <div class="nav-item" onclick="switchPage('202')">202</div>
+    <div class="nav-item" onclick="switchPage('301')">301</div>
+    <div class="nav-item" onclick="switchPage('302')">302</div>
+</div>
+
+<div class="container">
+    <h2>⚡ 套房獨立帳單系統</h2>
+    <div class="sub-title">自動判定 202 季節電價</div>
+    
+    <div class="date-section">
+        <div class="date-group">
+            <label>前期抄表日</label>
+            <input type="date" id="startDate" onchange="update202Info()">
+        </div>
+        <div class="date-group">
+            <label>本期抄表日</label>
+            <input type="date" id="endDate" onchange="update202Info()">
+        </div>
+    </div>
+
+    <div id="pagesContainer"></div>
+</div>
+
+<script>
+const roomConfigs = {
+    '102': { rent: 6500 },
+    '201': { rent: 8000 },
+    '202': { rent: 6000 },
+    '301': { rent: 8500 },
+    '302': { rent: 6500 }
+};
+const rooms = Object.keys(roomConfigs);
+
+// 初始化執行
+setTimeout(() => {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('endDate').value = today;
+    const lastMonth = new Date();
+    lastMonth.setMonth(lastMonth.getMonth() - 1);
+    document.getElementById('startDate').value = lastMonth.toISOString().split('T')[0];
+    
+    renderRoomPages();
+    loadAllHistories();
+    update202Info();
+}, 100);
+
+function get202Rate() {
+    const endDateVal = document.getElementById('endDate').value;
+    if (!endDateVal) return 5.5;
+    const month = parseInt(endDateVal.split('-')[1]);
+    return [6, 7, 8, 9].includes(month) ? 5.5 : 5.0;
+}
+
+function update202Info() {
+    const rateSpan = document.getElementById('rate-val-202');
+    if (rateSpan) { rateSpan.innerText = get202Rate(); }
+}
+
+function renderRoomPages() {
+    const container = document.getElementById('pagesContainer');
+    container.innerHTML = '';
+    
+    rooms.forEach((room, index) => {
+        const activeClass = index === 0 ? 'active' : '';
+        const rentAmount = roomConfigs[room].rent;
+        
+        let infoHTML = `📌 <b>${room}房 固定月租：</b> ${rentAmount.toLocaleString()} 元 / 月<br>💧 <b>自來水費：</b> 100 元 × 人數`;
+        if (room === '202') {
+            infoHTML = `📌 <b>202房 固定月租：</b> 6,000 元 / 月<br>⚡ <b>目前電費：</b> <span id="rate-val-202">5.5</span> 元 / 度 (6-9月5.5，其餘5元)<br>💧 <b>自來水費：</b> 100 元 × 人數`;
+        }
+
+        container.innerHTML += `
+            <div class="room-page ${activeClass}" id="page-${room}">
+                <div class="room-title-bar"><div class="room-title">${room} 房專頁</div><button class="btn-clear" onclick="clearHistory('${room}')">清空歷史</button></div>
+                <div class="fixed-cost-box">${infoHTML}</div>
+                <div class="input-group"><label>前期電表度數 (舊)：</label><input type="number" id="prev-${room}" inputmode="decimal" placeholder="請輸入上次度數"></div>
+                <div class="input-group"><label>本期電表度數 (新)：</label><input type="number" id="curr-${room}" inputmode="decimal" placeholder="請輸入本次最新度數"></div>
+                <div class="input-group"><label>本月入住人數：</label><input type="number" id="people-${room}" inputmode="numeric" min="0" value="1"></div>
+                <div class="action-panel">
+                    <div class="bill-display">本期應繳總額：<span class="room-res-val">$ <span id="total-${room}">0</span></span></div>
+                    <button class="btn-calc" onclick="calculateAndSave('${room}')">1. 計算並儲存紀錄</button>
+                    <a href="#" id="line-btn-${room}" class="btn-line" target="_blank">🟢 2. 用 LINE 傳送帳單</a>
+                </div>
+                <div class="history-section">
+                    <div class="history-title">📋 歷史抄表紀錄</div>
+                    <table class="history-table">
+                        <thead><tr><th style="width:35%;">期間</th><th style="width:25%;">度數</th><th style="width:25%;">總額</th><th style="width:15%;">操作</th></tr></thead>
+                        <tbody id="history-body-${room}"><tr><td colspan="4" style="color:#94a3b8;">暫無紀錄</td></tr></tbody>
+                    </table>
+                </div>
+            </div>`;
+    });
+}
+
+function switchPage(targetRoom) {
+    document.querySelectorAll('.nav-item').forEach(item => item.innerText === targetRoom ? item.classList.add('active') : item.classList.remove('active'));
+    rooms.forEach(room => room === targetRoom ? document.getElementById(`page-${room}`).classList.add('active') : document.getElementById(`page-${room}`).classList.remove('active'));
+    if (targetRoom === '202') update202Info();
+}
+
+function calculateAndSave(room) {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    if (!startDate || !endDate) { alert('請先選擇抄表日期！'); return; }
+    
+    const dateText = `${startDate} ~ ${endDate}`;
+    const dateShort = `${startDate.substring(5)}~${endDate.substring(5)}`;
+    const prev = parseFloat(document.getElementById(`prev-${room}`).value);
+    const curr = parseFloat(document.getElementById(`curr-${room}`).value);
+    const people = parseInt(document.getElementById(`people-${room}`).value);
+
+    if (isNaN(prev) || isNaN(curr) || isNaN(people) || curr < prev) { alert('請填寫完整度數且新度數不可小於舊度數！'); return; }
+
+    const degrees = curr - prev;
+    const rate = room === '202' ? get202Rate() : 5.5;
+    const electricityPay = Math.round(degrees * rate);
+    const rentPay = roomConfigs[room].rent;
+    const waterPay = people * 100;
+    const finalPay = electricityPay + rentPay + waterPay;
+    
+    document.getElementById(`total-${room}`).innerText = finalPay.toLocaleString();
+
+    const newRecord = { id: Date.now(), dateText: dateShort, degrees: degrees.toFixed(1), totalPay: finalPay };
+    let history = JSON.parse(localStorage.getItem(`history_v6_${room}`)) || [];
+    history.unshift(newRecord);
+    localStorage.setItem(`history_v6_${room}`, JSON.stringify(history));
+    updateRoomTableDOM(room, history);
+
+    const message = `📋 ${room} 房每月應繳帳單\n--------------------\n【計費期間】${dateText}\n【前期度數】${prev.toFixed(1)} 度\n【本期度數】${curr.toFixed(1)} 度\n【實用度數】${degrees.toFixed(1)} 度\n【電費小計】$ ${electricityPay.toLocaleString()} 元 (${rate}元/度)\n【房屋租金】$ ${rentPay.toLocaleString()} 元\n【自來水費】$ ${waterPay.toLocaleString()} 元 (${people}人 × 100元)\n--------------------\n🔥【應繳總計】NT$ ${finalPay.toLocaleString()} 元\n--------------------\n*(請確認明細無誤後繳納，謝謝您！)*`;
+    
+    const lineBtn = document.getElementById(`line-btn-${room}`);
+    lineBtn.href = `https://line.me/R/msg/text/?${encodeURIComponent(message)}`;
+    lineBtn.style.display = 'block';
+
+    document.getElementById(`prev-${room}`).value = curr;
+    document.getElementById(`curr-${room}`).value = '';
+    alert(`${room} 房帳單計算完成！`);
+}
+
+function updateRoomTableDOM(room, history) {
+    const tbody = document.getElementById(`history-body-${room}`);
+    if (!tbody) return;
+    if (history.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="color:#94a3b8;">暫無紀錄</td></tr>`; return; }
+    tbody.innerHTML = '';
+    history.forEach(item => {
+        tbody.innerHTML += `<tr><td>${item.dateText}</td><td>${item.degrees}度</td><td style="font-weight:bold;color:#dc2626;">$${item.totalPay.toLocaleString()}</td><td><button class="btn-delete-row" onclick="deleteSingleRecord('${room}', ${item.id})">🗑️</button></td></tr>`;
+    });
+}
+
+function deleteSingleRecord(room, recordId) {
+    if (confirm('確定要刪除這筆紀錄嗎？')) {
+        let history = JSON.parse(localStorage.getItem(`history_v6_${room}`)) || [];
+        history = history.filter(item => item.id !== recordId);
+        localStorage.setItem(`history_v6_${room}`, JSON.stringify(history));
+        updateRoomTableDOM(room, history);
+    }
+}
+
+function loadAllHistories() { rooms.forEach(room => updateRoomTableDOM(room, JSON.parse(localStorage.getItem(`history_v6_${room}`)) || [])); }
+function clearHistory(room) { if (confirm('確定要清空此房歷史紀錄？')) { localStorage.removeItem(`history_v6_${room}`); updateRoomTableDOM(room, []); document.getElementById(`line-btn-${room}`).style.display = 'none'; } }
+</script>
+</body>
+</html>
