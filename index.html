@@ -2,301 +2,1207 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>套房財務管理系統</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>套房電錶AI拍照算費系統</title>
+    <!-- 引入 Tailwind CSS 與 Inter 字體 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+    <!-- 引入 html2canvas 用於圖表截圖 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f4f6f9; padding: 0; margin: 0; display: flex; flex-direction: column; align-items: center; }
-        .navbar { background-color: #1e3a8a; width: 100%; display: flex; justify-content: space-around; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
-        .nav-item { color: #93c5fd; padding: 15px 10px; text-decoration: none; font-weight: bold; font-size: 15px; flex: 1; text-align: center; border-bottom: 3px solid transparent; cursor: pointer; }
-        .nav-item.active { color: #ffffff; border-bottom: 3px solid #3b82f6; background-color: #1e40af; }
-        /* 總覽按鈕專屬偏綠色調 */
-        .nav-item.nav-summary { color: #a7f3d0; }
-        .nav-item.nav-summary.active { border-bottom: 3px solid #10b981; background-color: #065f46; color: #ffffff; }
-        
-        .container { background: white; padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); width: 100%; max-width: 480px; box-sizing: border-box; margin: 20px 10px; }
-        h2 { text-align: center; color: #1e293b; margin: 0 0 5px 0; font-size: 24px; }
-        .sub-title { text-align: center; color: #64748b; font-size: 14px; margin-bottom: 20px; }
-        .date-section { background: #f1f5f9; padding: 12px; border-radius: 8px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; border: 1px solid #cbd5e1; }
-        .date-section-title { font-size: 13px; font-weight: bold; color: #1e3a8a; width: 100%; margin-bottom: 6px; display: block; text-align: center; }
-        .date-group { flex: 1; }
-        .date-group label { display: block; font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 4px; }
-        .date-group input { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
-        .room-page { display: none; }
-        .room-page.active { display: block; }
-        .room-title-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 15px; }
-        .room-title { font-size: 22px; font-weight: bold; color: #1e3a8a; }
-        .fixed-cost-box { background-color: #f0fdf4; border: 1px dashed #bbf7d0; border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; font-size: 14px; color: #166534; }
-        .rent-date-box { background-color: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; padding: 12px; margin-bottom: 16px; }
-        .rent-date-box label { display: block; font-size: 13px; font-weight: bold; color: #b45309; margin-bottom: 6px; }
-        .rent-date-container { display: flex; gap: 10px; }
-        .input-group { margin-bottom: 16px; }
-        .input-group label { display: block; font-size: 14px; font-weight: 600; color: #475569; margin-bottom: 6px; }
-        .input-group input { width: 100%; padding: 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        .action-panel { background: #f8fafc; padding: 16px; border-radius: 12px; margin-bottom: 20px; text-align: center; }
-        .bill-display { font-size: 15px; color: #475569; margin-bottom: 8px; }
-        .elec-display { font-size: 14px; color: #64748b; margin-bottom: 12px; }
-        .room-res-val { font-weight: bold; color: #dc2626; font-size: 24px; }
-        .room-elec-val { font-weight: bold; color: #2563eb; font-size: 18px; }
-        button { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        .btn-calc { background-color: #3b82f6; color: white; margin-bottom: 10px; }
-        .btn-line { background-color: #06c755; color: white; display: none; text-decoration: none; box-sizing: border-box; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: bold; text-align: center; }
-        .history-section { margin-top: 25px; }
-        .history-title { font-size: 14px; font-weight: bold; color: #475569; margin-bottom: 8px; }
-        .history-table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; }
-        .history-table th, .history-table td { padding: 8px 1px; border: 1px solid #e2e8f0; }
-        .history-table th { background-color: #f1f5f9; color: #475569; font-weight: 600; }
-        .btn-delete-row { background: none; border: none; color: #ef4444; font-size: 15px; cursor: pointer; padding: 0; width: auto; }
-        .btn-clear { background: none; border: none; color: #ef4444; font-size: 12px; cursor: pointer; text-decoration: underline; padding: 0;}
-        
-        /* 總覽報表專屬樣式 */
-        .summary-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; text-align: center; }
-        .summary-table th, .summary-table td { padding: 10px 4px; border: 1px solid #cbd5e1; }
-        .summary-table th { background-color: #1e3a8a; color: white; }
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; }
     </style>
 </head>
-<body>
+<body class="bg-slate-100 text-slate-800 min-h-screen pb-16 selection:bg-blue-500 selection:text-white">
 
-<div class="navbar" id="navbar">
-    <div class="nav-item active" onclick="switchPage('102')">102</div>
-    <div class="nav-item" onclick="switchPage('201')">201</div>
-    <div class="nav-item" onclick="switchPage('202')">202</div>
-    <div class="nav-item" onclick="switchPage('301')">301</div>
-    <div class="nav-item" onclick="switchPage('302')">302</div>
-    <div class="nav-item nav-summary" onclick="switchPage('summary')">📊 總覽</div>
-</div>
-
-<div class="container">
-    <h2 id="mainTitle">⚡ 套房獨立帳單系統</h2>
-    <div class="sub-title" id="subTitle">自動判定 202 季節電價</div>
-    
-    <div class="date-section" id="globalDateSection">
-        <span class="date-section-title">⚡ 電價計費期間 (影響202電價月份判定)</span>
-        <div class="date-group">
-            <label>前期抄表日</label>
-            <input type="date" id="startDate" onchange="update202Info()">
+    <!-- 頂部導航列 (102, 201, 202, 301, 302, 總覽, 設定) -->
+    <header class="bg-slate-900 text-white sticky top-0 z-40 shadow-lg border-b border-slate-800">
+        <div class="max-w-md mx-auto flex items-center justify-between px-3 h-14">
+            <nav class="flex space-x-1 overflow-x-auto py-1 scrollbar-none" id="roomNav">
+                <button type="button" onclick="switchTab('102')" id="nav-102" class="px-3.5 py-1.5 rounded-xl font-bold text-xs transition duration-200 bg-blue-600 text-white shadow-sm">102</button>
+                <button type="button" onclick="switchTab('201')" id="nav-201" class="px-3.5 py-1.5 rounded-xl font-bold text-xs transition duration-200 text-slate-300 hover:text-white hover:bg-slate-800">201</button>
+                <button type="button" onclick="switchTab('202')" id="nav-202" class="px-3.5 py-1.5 rounded-xl font-bold text-xs transition duration-200 text-slate-300 hover:text-white hover:bg-slate-800">202</button>
+                <button type="button" onclick="switchTab('301')" id="nav-301" class="px-3.5 py-1.5 rounded-xl font-bold text-xs transition duration-200 text-slate-300 hover:text-white hover:bg-slate-800">301</button>
+                <button type="button" onclick="switchTab('302')" id="nav-302" class="px-3.5 py-1.5 rounded-xl font-bold text-xs transition duration-200 text-slate-300 hover:text-white hover:bg-slate-800">302</button>
+                <button type="button" onclick="switchTab('summary')" id="nav-summary" class="px-3 py-1.5 rounded-xl font-bold text-xs transition duration-200 text-emerald-400 hover:text-emerald-300 hover:bg-slate-800 flex items-center gap-1">📊 總覽</button>
+            </nav>
+            <button type="button" onclick="openApiKeyModal()" class="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition" title="設定 Gemini API Key">
+                ⚙️
+            </button>
         </div>
-        <div class="date-group">
-            <label>本期抄表日</label>
-            <input type="date" id="endDate" onchange="update202Info()">
-        </div>
-    </div>
+    </header>
 
-    <div id="pagesContainer"></div>
-    
-    <div id="page-summary" class="room-page">
-        <div class="room-title-bar">
-            <div class="room-title">📋 全套房最新帳單總覽</div>
-        </div>
-        <table class="summary-table">
-            <thead>
-                <tr>
-                    <th>房號</th>
-                    <th style="width: 35%;">租賃期間</th>
-                    <th>度數</th>
-                    <th>純電費</th>
-                    <th>應繳總額</th>
-                </tr>
-            </thead>
-            <tbody id="summary-table-body">
-                </tbody>
-        </table>
-        <p style="font-size: 11px; color: #64748b; text-align: center; margin-top: 15px;">*(此處顯示各房歷史紀錄中最新的一筆存檔資料)*</p>
-    </div>
-</div>
+    <main class="max-w-md mx-auto px-4 pt-4 space-y-4">
 
-<script>
-const roomConfigs = { '102': { rent: 6500 }, '201': { rent: 8000 }, '202': { rent: 6000 }, '301': { rent: 8500 }, '302': { rent: 6500 } };
-const rooms = Object.keys(roomConfigs);
-const dbVersion = "history_v16"; // 更新庫代碼防衝突
-
-window.onload = function() {
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('endDate').value = today;
-    const lastMonth = new Date(); lastMonth.setMonth(lastMonth.getMonth() - 1);
-    document.getElementById('startDate').value = lastMonth.toISOString().split('T')[0];
-    renderRoomPages(); loadAllHistories(); update202Info();
-};
-
-function get202Rate() {
-    const endDateVal = document.getElementById('endDate').value;
-    if (!endDateVal) return 5.5;
-    const month = parseInt(endDateVal.split('-')[1]);
-    return [6, 7, 8, 9].includes(month) ? 5.5 : 5.0;
-}
-
-function update202Info() {
-    const rateSpan = document.getElementById('rate-val-202');
-    if (rateSpan) rateSpan.innerText = get202Rate();
-}
-
-function formatCurrency(val) {
-    return Math.floor(Number(val)).toLocaleString('zh-TW', { maximumFractionDigits: 0 });
-}
-
-function renderRoomPages() {
-    const container = document.getElementById('pagesContainer'); container.innerHTML = '';
-    const today = new Date().toISOString().split('T')[0];
-    const lastMonth = new Date(); lastMonth.setMonth(lastMonth.getMonth() - 1);
-    const lastMonthStr = lastMonth.toISOString().split('T')[0];
-    
-    rooms.forEach((room, index) => {
-        const activeClass = index === 0 ? 'active' : '';
-        const rentAmount = roomConfigs[room].rent;
-        let infoHTML = `📌 <b>${room}房 固定月租：</b> ${rentAmount.toLocaleString()} 元 / 月<br>💧 <b>自來水費：</b> 100 元 × 人數`;
-        if (room === '202') {
-            infoHTML = `📌 <b>202房 固定月租：</b> 6,000 元 / 月<br>⚡ <b>目前電費：</b> <span id="rate-val-202">5.5</span> 元 / 度 (6-9月為5.5，其餘5元)<br>💧 <b>自來水費：</b> 100 元 × 人數`;
-        }
-        container.innerHTML += `
-            <div class="room-page ${activeClass}" id="page-${room}">
-                <div class="room-title-bar"><div class="room-title">${room} 房專頁</div><button class="btn-clear" onclick="clearHistory('${room}')">清空歷史</button></div>
-                <div class="fixed-cost-box">${infoHTML}</div>
-                <div class="rent-date-box">
-                    <label>📅 本期套房出租期間：</label>
-                    <div class="rent-date-container">
-                        <div class="date-group"><input type="date" id="rentStart-${room}" value="${lastMonthStr}"></div>
-                        <div class="date-group"><input type="date" id="rentEnd-${room}" value="${today}"></div>
-                    </div>
+        <!-- 頂部計費期間卡片 (只保留本期抄表日，自動判定 202 季節電價) -->
+        <div id="globalDateCard" class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80">
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-1.5">
+                    <span class="text-amber-500 font-bold text-base">⚡</span>
+                    <h2 class="text-xs font-bold text-slate-700">電價計費標準 (依本期抄表日自動判定)</h2>
                 </div>
-                <div class="input-group"><label>前期電表度數 (舊)：</label><input type="number" id="prev-${room}" inputmode="decimal" placeholder="請輸入上次度數"></div>
-                <div class="input-group"><label>本期電表度數 (新)：</label><input type="number" id="curr-${room}" inputmode="decimal" placeholder="請輸入本次最新度數"></div>
-                <div class="input-group"><label>本月入住人數：</label><input type="number" id="people-${room}" inputmode="numeric" min="0" value="1"></div>
-                <div class="action-panel">
-                    <div class="elec-display">⚡ 本期純電費：<span class="room-elec-val">$ <span id="elec-total-${room}">0</span></span></div>
-                    <div class="bill-display">💰 本期應繳總額：<span class="room-res-val">$ <span id="total-${room}">0</span></span></div>
-                    <button class="btn-calc" onclick="calculateAndSave('${room}')">1. 計算並儲存紀錄</button>
-                    <a href="#" id="line-btn-${room}" class="btn-line" target="_blank">🟢 2. 用 LINE 傳送帳單</a>
+                <span id="rateBadge202" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-mono">202: 5.0元/度</span>
+            </div>
+            <div>
+                <label class="block text-[11px] font-semibold text-slate-500 mb-1">📅 本期抄表日期</label>
+                <input type="date" id="globalEndDate" onchange="onGlobalDateChange()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+        </div>
+
+        <!-- 各套房專屬內容容器 (由 JS 動態生成) -->
+        <div id="roomContainers"></div>
+
+        <!-- 全套房總覽頁面 (預設隱藏) -->
+        <div id="summaryView" class="hidden space-y-4">
+            <div id="summaryCaptureArea" class="bg-white rounded-2xl p-0 shadow-md border border-slate-200 flex flex-col">
+                <div class="bg-gradient-to-r from-slate-800 to-slate-900 p-3 sm:p-4 flex items-center justify-between rounded-t-2xl">
+                    <h3 class="font-bold text-white text-sm flex items-center gap-1.5" id="summaryHeaderTitle">
+                        <span class="bg-white/20 p-1.5 rounded-lg text-base leading-none">📊</span>
+                        <span><span id="summaryYearText">2026 年</span> 租金水電金額</span>
+                    </h3>
+                    <span class="text-[10px] text-slate-300 font-medium px-2 py-1 rounded-full bg-slate-800/50 border border-slate-700">最新一期彙整</span>
                 </div>
-                <div class="history-section">
-                    <div class="history-title">📋 歷史抄表紀錄</div>
-                    <table class="history-table">
-                        <thead>
+                <div class="p-1 sm:p-2 w-full bg-white rounded-b-2xl">
+                    <table class="w-full text-[11px] sm:text-xs text-left border-collapse">
+                        <thead class="text-slate-500 bg-slate-50">
                             <tr>
-                                <th style="width:32%;">租賃期間</th>
-                                <th style="width:32%;">抄表期間</th>
-                                <th style="width:14%;">度數</th>
-                                <th style="width:14%;">純電費</th>
-                                <th style="width:14%;">總額</th>
-                                <th style="width:8%;">刪</th>
+                                <th class="py-2.5 px-1 font-bold border-b border-slate-200 text-center w-10">房號</th>
+                                <th class="py-2.5 px-1 font-bold border-b border-slate-200 text-center">租賃期間</th>
+                                <th class="py-2.5 px-1 font-bold text-right border-b border-slate-200">電費</th>
+                                <th class="py-2.5 px-1 font-bold text-right border-b border-slate-200">水費</th>
+                                <th class="py-2.5 px-1.5 font-bold text-right text-emerald-700 border-b border-slate-200">總額</th>
                             </tr>
                         </thead>
-                        <tbody id="history-body-${room}"><tr><td colspan="6" style="color:#94a3b8;">暫無紀錄</td></tr></tbody>
+                        <tbody id="summaryTableBody" class="divide-y divide-slate-100 font-medium bg-white">
+                            <!-- 動態填入總覽資料 -->
+                        </tbody>
+                        <tfoot id="summaryTableFoot" class="bg-slate-50/80 font-bold border-t-2 border-slate-200">
+                            <!-- 動態填入合計總額 -->
+                        </tfoot>
                     </table>
                 </div>
-            </div>`;
-    });
-}
+            </div>
+            
+            <!-- 總覽專屬分享操作按鈕 -->
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-2">
+                <h4 class="font-bold text-slate-800 text-xs flex items-center gap-1.5 mb-3">
+                    <span>📤</span> 匯出總覽報表
+                </h4>
+                <div class="flex gap-2">
+                    <button type="button" onclick="shareSummaryImage()" class="flex-1 bg-[#06c755] hover:bg-[#05b34c] active:scale-[0.99] text-white py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow transition duration-150">
+                        <span>🟢</span> 傳送 LINE 總覽圖表
+                    </button>
+                    <button type="button" onclick="downloadSummaryImage()" class="bg-slate-700 hover:bg-slate-600 active:scale-[0.99] text-slate-200 py-2.5 px-3 rounded-xl font-bold text-xs transition duration-150" title="下載報表圖表">
+                        📥 下載圖表
+                    </button>
+                </div>
+            </div>
+        </div>
 
-function switchPage(targetRoom) {
-    // 切換選單亮起顏色
-    document.querySelectorAll('.nav-item').forEach(item => {
-        const text = item.innerText.includes("總覽") ? "summary" : item.innerText.trim();
-        text === targetRoom ? item.classList.add('active') : item.classList.remove('active');
-    });
-    
-    // 切換頁面容器
-    rooms.forEach(room => {
-        document.getElementById(`page-${room}`).classList.remove('active');
-    });
-    document.getElementById('page-summary').classList.remove('active');
-    
-    // 判斷是否點選了總覽
-    if (targetRoom === 'summary') {
-        document.getElementById('page-summary').classList.add('active');
-        document.getElementById('globalDateSection').style.display = 'none'; // 總覽頁隱藏抄表日，保持乾淨
-        generateSummaryReport(); // 刷新總覽數據
-    } else {
-        document.getElementById(`page-${roomContent = targetRoom}`).classList.add('active');
-        document.getElementById('globalDateSection').style.display = 'flex';
-        if (targetRoom === '202') update202Info();
-    }
-}
+    </main>
 
-function calculateAndSave(room) {
-    const eleStart = document.getElementById('startDate').value;
-    const eleEnd = document.getElementById('endDate').value;
-    const rStart = document.getElementById(`rentStart-${room}`).value;
-    const rEnd = document.getElementById(`rentEnd-${room}`).value;
-    if (!eleStart || !eleEnd || !rStart || !rEnd) { alert('請填寫完整日期期間！'); return; }
-    
-    const eleDateText = `${eleStart} ~ ${eleEnd}`;
-    const rentDateText = `${rStart} ~ ${rEnd}`;
-    const shortRent = `${rStart.substring(5).replace('-','/')}-${rEnd.substring(5).replace('-','/')}`;
-    const shortEle = `${eleStart.substring(5).replace('-','/')}-${eleEnd.substring(5).replace('-','/')}`;
-    
-    const prev = parseFloat(document.getElementById(`prev-${room}`).value);
-    const curr = parseFloat(document.getElementById(`curr-${room}`).value);
-    const people = parseInt(document.getElementById(`people-${room}`).value);
-    if (isNaN(prev) || isNaN(curr) || isNaN(people) || curr < prev) { alert('請填寫正確度數！'); return; }
+    <!-- 選擇照片來源選單 (相機拍照 或 相簿上傳) -->
+    <div id="mediaSourceModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-3">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-5 space-y-4 shadow-2xl border border-slate-100">
+            <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+                <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                    <span>📷</span> 選擇電錶照片來源
+                </h4>
+                <button type="button" onclick="closeMediaSourceModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold px-1">&times;</button>
+            </div>
+            <p class="text-xs text-slate-500" id="mediaSourceModalDesc">請選擇要直接使用手機相機拍攝電錶，或從現有相簿挑選相片：</p>
+            <div class="grid grid-cols-2 gap-3 pt-1">
+                <button type="button" onclick="chooseSourceAndOpen('camera')" class="flex flex-col items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 py-4 px-2 rounded-2xl transition duration-150 active:scale-95">
+                    <span class="text-2xl">📸</span>
+                    <span class="text-xs font-bold">開啟相機拍照</span>
+                </button>
+                <button type="button" onclick="chooseSourceAndOpen('gallery')" class="flex flex-col items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 py-4 px-2 rounded-2xl transition duration-150 active:scale-95">
+                    <span class="text-2xl">🖼️</span>
+                    <span class="text-xs font-bold">從相簿挑照片</span>
+                </button>
+            </div>
+            <button type="button" onclick="closeMediaSourceModal()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition">
+                取消
+            </button>
+        </div>
+    </div>
 
-    const degrees = curr - prev;
-    const rate = room === '202' ? get202Rate() : 5.5;
-    
-    const electricityPay = parseInt(Math.floor(degrees * rate));
-    const rentPay = parseInt(roomConfigs[room].rent);
-    const waterPay = parseInt(people * 100);
-    const finalPay = parseInt(electricityPay + rentPay + waterPay);
-    
-    document.getElementById(`elec-total-${room}`).innerText = formatCurrency(electricityPay);
-    document.getElementById(`total-${room}`).innerText = formatCurrency(finalPay);
+    <!-- 刪除確認彈窗 (無原生 confirm) -->
+    <div id="deleteConfirmModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-xs w-full p-5 space-y-4 shadow-2xl text-center">
+            <div class="text-3xl text-amber-500">⚠️</div>
+            <h4 class="font-bold text-slate-800 text-sm" id="deleteConfirmTitle">確定要刪除這筆紀錄嗎？</h4>
+            <p class="text-xs text-slate-500" id="deleteConfirmDesc">刪除後將無法復原此筆資料與相片。</p>
+            <div class="flex gap-2 pt-2">
+                <button id="deleteConfirmBtn" class="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2.5 rounded-xl transition">確定刪除</button>
+                <button onclick="closeDeleteModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2.5 rounded-xl transition">取消</button>
+            </div>
+        </div>
+    </div>
 
-    const newRecord = { id: Date.now(), rentFullText: rentDateText, rentText: shortRent, eleText: shortEle, degrees: degrees.toFixed(1), elecPay: electricityPay, totalPay: finalPay };
-    let history = JSON.parse(localStorage.getItem(`${dbVersion}_${room}`)) || [];
-    history.unshift(newRecord); localStorage.setItem(`${dbVersion}_${room}`, JSON.stringify(history));
-    updateRoomTableDOM(room, history);
+    <!-- 電錶相片放大查看彈窗 (可放大查看每期電錶刻度) -->
+    <div id="photoViewerModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full overflow-hidden shadow-2xl border border-slate-200">
+            <div class="p-3 bg-slate-900 text-white flex justify-between items-center">
+                <div>
+                    <h4 class="font-bold text-xs" id="photoViewerTitle">電錶歷史相片</h4>
+                    <p class="text-[10px] text-slate-300 font-mono" id="photoViewerSubtitle"></p>
+                </div>
+                <button onclick="closePhotoViewerModal()" class="text-slate-400 hover:text-white text-2xl font-bold px-1">&times;</button>
+            </div>
+            <div class="p-2 bg-slate-100 flex items-center justify-center min-h-[220px] max-h-[360px] overflow-hidden">
+                <img id="photoViewerImg" src="" alt="電錶紀錄" class="max-w-full max-h-[340px] object-contain rounded-lg shadow-sm">
+            </div>
+            <div class="p-3 bg-white border-t border-slate-100 flex justify-between items-center text-xs">
+                <div class="text-slate-600">
+                    <span>紀錄度數：</span>
+                    <span id="photoViewerDegrees" class="font-black text-blue-600 font-mono text-xs"></span>
+                </div>
+                <button onclick="closePhotoViewerModal()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition text-xs">關閉</button>
+            </div>
+        </div>
+    </div>
 
-    const message = `📋 ${room} 房每月應繳帳單\n--------------------\n【電價計費期間】${eleDateText}\n【房租租賃期間】${rentDateText}\n【前期度數】${prev.toFixed(1)} 度 (舊)\n【本期度數】${curr.toFixed(1)} 度 (新)\n【實用度數】${degrees.toFixed(1)} 度\n【電費小計】$ ${formatCurrency(electricityPay)} 元 (${rate}元/度)\n【房屋租金】$ ${formatCurrency(rentPay)} 元\n【自來水費】$ ${formatCurrency(waterPay)} 元 (${people}人 × 100元)\n--------------------\n🔥【應繳總計】NT$ ${formatCurrency(finalPay)} 元\n--------------------\n*(請確認明細無誤後繳納，謝謝您！)*`;
-    const lineBtn = document.getElementById(`line-btn-${room}`);
-    lineBtn.href = `https://line.me/R/msg/text/?${encodeURIComponent(message)}`;
-    lineBtn.style.display = 'block';
-    
-    document.getElementById(`prev-${room}`).value = curr;
-    document.getElementById(`curr-${room}`).value = '';
-    alert(`${room} 房帳單計算完成！`);
-}
+    <!-- API Key 設定彈窗 -->
+    <div id="apiKeyModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl border border-slate-100">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                <h4 class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+                    <span>⚙️</span> Gemini API Key 設定
+                </h4>
+                <button type="button" onclick="closeApiKeyModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold px-1">&times;</button>
+            </div>
+            <p class="text-xs text-slate-500 leading-relaxed">
+                若您下載此檔案至手機離線使用，請填入免費的 Google Gemini API 金鑰（在線上預覽測試時可留空）：
+            </p>
+            <div>
+                <input type="password" id="apiKeyInput" placeholder="請貼上 AIzaSy 開頭的金鑰" class="w-full text-xs font-mono border border-slate-300 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="flex gap-2">
+                <button type="button" onclick="saveApiKey()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 rounded-xl transition">儲存設定</button>
+                <button type="button" onclick="closeApiKeyModal()" class="px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold py-2.5 rounded-xl transition">關閉</button>
+            </div>
+        </div>
+    </div>
 
-function generateSummaryReport() {
-    const tbody = document.getElementById('summary-table-body');
-    tbody.innerHTML = '';
-    
-    rooms.forEach(room => {
-        const history = JSON.parse(localStorage.getItem(`${dbVersion}_${room}`)) || [];
-        if (history.length > 0) {
-            const latest = history[0]; // 抓取最新一筆
-            tbody.innerHTML += `
-                <tr>
-                    <td style="font-weight:bold; color:#1e3a8a;">${room}</td>
-                    <td style="font-size:11px; color:#475569;">${latest.rentFullText || latest.rentText}</td>
-                    <td>${latest.degrees}度</td>
-                    <td>$${formatCurrency(latest.elecPay)}</td>
-                    <td style="font-weight:bold; color:#dc2626;">$${formatCurrency(latest.totalPay)}</td>
-                </tr>`;
-        } else {
-            tbody.innerHTML += `<tr><td style="font-weight:bold; color:#1e3a8a;">${room}</td><td colspan="4" style="color:#94a3b8;">暫無最新資料</td></tr>`;
+    <!-- Toast 輕量提示元件 -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 transform opacity-0 pointer-events-none translate-y-3">
+        <div class="bg-slate-900/90 text-white text-xs font-medium px-4 py-2.5 rounded-full shadow-lg backdrop-blur flex items-center gap-2 border border-slate-700 whitespace-nowrap">
+            <span id="toastIcon">ℹ️</span>
+            <span id="toastMsg">通知訊息</span>
+        </div>
+    </div>
+
+    <!-- 隱藏之相機與相簿 input 元件 -->
+    <input type="file" id="appCameraInput" accept="image/*" capture="environment" class="hidden" onchange="handleImageSelected(this)">
+    <input type="file" id="appGalleryInput" accept="image/*" class="hidden" onchange="handleImageSelected(this)">
+
+    <script>
+    // 常數與套房設定
+    const roomKeys = ['102', '201', '202', '301', '302'];
+    const dbKeyPrefix = 'suite_meter_v2026_';
+    const roomRentConfigs = {
+        '102': { rent: 6500, defaultWater: 100 },
+        '201': { rent: 8000, defaultWater: 100 },
+        '202': { rent: 6000, defaultWater: 100 },
+        '301': { rent: 8500, defaultWater: 100 },
+        '302': { rent: 6500, defaultWater: 100 }
+    };
+
+    // 狀態管理
+    let currentActiveTab = '102';
+    let localApiKey = '';
+    let pendingRoomForMedia = null;
+    let pendingTargetField = 'curr'; // 'curr' (本期新錶) 或 'prev' (前期舊錶)
+    const roomStore = {};
+    const roomBillMessages = {};
+    const roomActivePhotos = {}; // 暫存當前各房拍攝之電錶相片 { '102': { curr: base64, prev: base64 } }
+
+    window.onload = function() {
+        // 初始化本期抄表日為今天
+        const todayStr = new Date().toISOString().split('T')[0];
+        document.getElementById('globalEndDate').value = todayStr;
+
+        // 讀取本地保存的 API Key
+        localApiKey = localStorage.getItem('gemini_api_key') || '';
+        if (localApiKey) {
+            document.getElementById('apiKeyInput').value = localApiKey;
         }
-    });
-}
 
-function updateRoomTableDOM(room, history) {
-    const tbody = document.getElementById(`history-body-${room}`); if (!tbody) return;
-    if (!history || history.length === 0) { tbody.innerHTML = `<tr><td colspan="6" style="color:#94a3b8;">暫無紀錄</td></tr>`; return; }
-    tbody.innerHTML = '';
-    history.forEach(item => {
-        tbody.innerHTML += `<tr><td>${item.rentText}</td><td>${item.eleText}</td><td>${item.degrees}度</td><td>$${formatCurrency(item.elecPay || 0)}</td><td style="font-weight:bold;color:#dc2626;">$${formatCurrency(item.totalPay)}</td><td><button class="btn-delete-row" onclick="deleteSingleRecord('${room}', ${item.id})">🗑️</button></td></tr>`;
-    });
-}
+        // 初始化所有套房資料結構
+        roomKeys.forEach(room => {
+            const savedHistory = JSON.parse(localStorage.getItem(`${dbKeyPrefix}${room}`)) || [];
+            
+            let rStart = getPreviousMonthDate(todayStr);
+            let rEnd = todayStr;
 
-function deleteSingleRecord(room, recordId) {
-    if (confirm('確定要刪除這筆紀錄嗎？')) {
-        let history = JSON.parse(localStorage.getItem(`${dbVersion}_${room}`)) || [];
-        history = history.filter(item => item.id !== recordId);
-        localStorage.setItem(`${dbVersion}_${room}`, JSON.stringify(history));
-        updateRoomTableDOM(room, history);
-        if (document.getElementById('page-summary').classList.contains('active')) generateSummaryReport();
+            // 從歷史紀錄推算下一期預設時間，無縫接軌
+            if (savedHistory.length > 0 && savedHistory[0].rentEnd) {
+                const lastEnd = new Date(savedHistory[0].rentEnd);
+                const nextStart = new Date(lastEnd);
+                nextStart.setDate(nextStart.getDate() + 1);
+                
+                const nextEnd = new Date(nextStart);
+                nextEnd.setMonth(nextEnd.getMonth() + 1);
+                nextEnd.setDate(nextEnd.getDate() - 1);
+                
+                const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                
+                rStart = fmt(nextStart);
+                rEnd = fmt(nextEnd);
+            }
+
+            roomStore[room] = {
+                history: savedHistory,
+                rentStart: rStart,
+                rentEnd: rEnd
+            };
+            roomActivePhotos[room] = { curr: null, prev: null };
+        });
+
+        // 渲染套房 DOM 節點
+        renderAllRooms();
+
+        // 刷新 202 季節電價標籤與各房電費計算
+        update202RateBadge();
+        roomKeys.forEach(room => recalculateRoom(room));
+    };
+
+    function getPreviousMonthDate(dateString) {
+        const d = new Date(dateString);
+        d.setMonth(d.getMonth() - 1);
+        return d.toISOString().split('T')[0];
     }
-}
 
-function loadAllHistories() { rooms.forEach(room => updateRoomTableDOM(room, JSON.parse(localStorage.getItem(`${dbVersion}_${room}`)) || [])); }
-function clearHistory(room) { if (confirm('確定要清空此房歷史紀錄？')) { localStorage.removeItem(`${dbVersion}_${room}`); updateRoomTableDOM(room, []); document.getElementById(`line-btn-${room}`).style.display = 'none'; } }
-</script>
+    function formatNumber(num) {
+        return Math.round(Number(num) || 0).toLocaleString('zh-TW');
+    }
+
+    function get202Rate() {
+        const dateVal = document.getElementById('globalEndDate').value;
+        if (!dateVal) return 5.0;
+        const month = parseInt(dateVal.split('-')[1], 10);
+        return [6, 7, 8, 9].includes(month) ? 5.5 : 5.0;
+    }
+
+    function update202RateBadge() {
+        const rate = get202Rate();
+        const badge = document.getElementById('rateBadge202');
+        if (badge) {
+            badge.innerText = `202: ${rate.toFixed(1)}元/度 (${rate === 5.5 ? '夏季' : '非夏季'})`;
+        }
+        const roomRateSpan = document.getElementById('rateDisplay-202');
+        if (roomRateSpan) {
+            roomRateSpan.innerText = `${rate.toFixed(1)} 元 / 度`;
+        }
+    }
+
+    function onGlobalDateChange() {
+        update202RateBadge();
+        roomKeys.forEach(room => recalculateRoom(room));
+    }
+
+    function onRentStartChange(room) {
+        const startInput = document.getElementById(`rentStart-${room}`);
+        const endInput = document.getElementById(`rentEnd-${room}`);
+        if (!startInput.value) return;
+
+        const startDate = new Date(startInput.value);
+        // 推算下個月同日的前一天
+        const nextMonthDate = new Date(startDate);
+        nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
+        nextMonthDate.setDate(nextMonthDate.getDate() - 1);
+
+        const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        endInput.value = fmt(nextMonthDate);
+        
+        // 同步更新記憶體資料
+        roomStore[room].rentStart = startInput.value;
+        roomStore[room].rentEnd = endInput.value;
+        
+        recalculateRoom(room);
+        showToast(`已自動將迄日推算至 ${endInput.value}`, '📅');
+    }
+
+    function renderAllRooms() {
+        const container = document.getElementById('roomContainers');
+        container.innerHTML = '';
+
+        roomKeys.forEach(room => {
+            const isFirst = (room === '102');
+            const history = roomStore[room].history;
+            const lastRecord = history.length > 0 ? history[0] : null;
+            const defaultPrevDegree = lastRecord ? lastRecord.currDegree : '';
+
+            const section = document.createElement('section');
+            section.id = `roomPage-${room}`;
+            section.className = isFirst ? 'space-y-4' : 'hidden space-y-4';
+
+            section.innerHTML = `
+                <!-- 套房資訊與適用電價 -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="font-black text-slate-800 text-base">${room} 號套房專頁</h3>
+                            <p class="text-xs text-slate-500 mt-0.5">本期房租水電核算</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[11px] text-slate-400 block">當前適用電價</span>
+                            <span id="rateDisplay-${room}" class="font-extrabold text-blue-600 font-mono text-sm">
+                                ${room === '202' ? get202Rate().toFixed(1) : '5.5'} 元 / 度
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 本期套房出租期間卡片 -->
+                <div class="bg-amber-50/60 rounded-2xl p-4 border border-amber-200/80 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                            <span>📅</span> 租賃期間設定
+                        </label>
+                        <span class="text-[10px] font-normal text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded shadow-sm">修改起日自動算迄日</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <span class="block text-[10px] text-amber-700/80 mb-0.5">設定租金起始日</span>
+                            <input type="date" id="rentStart-${room}" value="${roomStore[room].rentStart}" onchange="onRentStartChange('${room}')" class="w-full bg-white border border-amber-300 rounded-xl px-2.5 py-1.5 text-xs font-mono font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm">
+                        </div>
+                        <div>
+                            <span class="block text-[10px] text-amber-700/80 mb-0.5">自動推算迄日</span>
+                            <input type="date" id="rentEnd-${room}" value="${roomStore[room].rentEnd}" onchange="recalculateRoom('${room}')" class="w-full bg-amber-100/50 border border-amber-200 rounded-xl px-2.5 py-1.5 text-xs font-mono font-medium text-slate-600 focus:outline-none focus:ring-0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 電錶拍照辨識與度數比對區塊 -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                            <span class="text-amber-500">⚡</span> 電錶拍照辨識與度數比對
+                        </h4>
+                        <span class="text-[10px] text-blue-600 bg-blue-50 font-bold px-2 py-0.5 rounded-full border border-blue-100">Gemini 視覺 AI</span>
+                    </div>
+
+                    <!-- 單一大按鈕：拍照或挑選照片 -->
+                    <button type="button" onclick="promptMediaChoice('${room}', 'curr')" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white py-3.5 px-4 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 transition duration-150">
+                        <span class="text-base">📷</span>
+                        <span>拍照 / 上傳電錶相片辨識度數</span>
+                    </button>
+
+                    <!-- 照片縮圖與 AI 辨識進度預覽 -->
+                    <div id="photoPreviewCard-${room}" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-3">
+                        <div class="flex items-center gap-3">
+                            <img id="meterThumb-${room}" src="" alt="電錶縮圖" class="w-16 h-16 object-cover rounded-xl border border-slate-200 shadow-inner">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between">
+                                    <span id="meterBadge-${room}" class="text-[11px] font-bold text-slate-700">AI 電錶相片</span>
+                                    <span id="aiConfidence-${room}" class="text-[10px] font-mono text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">辨識成功</span>
+                                </div>
+                                <p class="text-[11px] text-emerald-600 font-semibold mt-1 truncate" id="meterFileName-${room}">📸 照片已就緒，按下方儲存將自動存檔</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 度數輸入與比對欄位 -->
+                    <div class="grid grid-cols-2 gap-3 pt-1">
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-[11px] font-bold text-slate-600">前期度數 (舊)</label>
+                                <button type="button" onclick="promptMediaChoice('${room}', 'prev')" class="text-[10px] font-bold text-blue-600 hover:text-blue-800 underline">📷 拍舊錶</button>
+                            </div>
+                            <input type="number" step="0.1" id="prevDegree-${room}" value="${defaultPrevDegree}" placeholder="上次度數" oninput="recalculateRoom('${room}')" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-[11px] font-bold text-slate-600">本期度數 (新)</label>
+                                <button type="button" onclick="promptMediaChoice('${room}', 'curr')" class="text-[10px] font-bold text-blue-600 hover:text-blue-800 underline">📷 拍新錶</button>
+                            </div>
+                            <input type="number" step="0.1" id="currDegree-${room}" placeholder="自動填入" oninput="recalculateRoom('${room}')" class="w-full bg-blue-50/60 border border-blue-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <!-- 度數微調快捷按鈕 -->
+                    <div class="flex items-center justify-end gap-1.5 pt-0.5">
+                        <span class="text-[10px] text-slate-400 mr-1">微調：</span>
+                        <button type="button" onclick="adjustDegree('${room}', -1)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold rounded-lg font-mono transition">-1</button>
+                        <button type="button" onclick="adjustDegree('${room}', 1)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold rounded-lg font-mono transition">+1</button>
+                        <button type="button" onclick="adjustDegree('${room}', -0.1)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold rounded-lg font-mono transition">-0.1</button>
+                        <button type="button" onclick="adjustDegree('${room}', 0.1)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold rounded-lg font-mono transition">+0.1</button>
+                    </div>
+                </div>
+
+                <!-- 本期電費計算與動作卡片 (只顯示純電費計算) -->
+                <div class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-5 text-white shadow-xl space-y-4">
+                    <div class="flex justify-between items-end border-b border-slate-700/80 pb-3">
+                        <div>
+                            <span class="text-[11px] font-medium text-slate-300">本期實用度數</span>
+                            <div class="text-xl font-black font-mono tracking-tight text-white mt-0.5">
+                                <span id="usedDegrees-${room}">0.0</span> <span class="text-xs text-slate-400 font-normal">度</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[11px] font-medium text-emerald-400">本期應繳純電費</span>
+                            <div class="text-2xl font-black font-mono tracking-tight text-emerald-400 mt-0.5">
+                                $ <span id="totalElecPay-${room}">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <!-- 確認並儲存 -->
+                        <button type="button" onclick="saveRoomRecord('${room}')" class="w-full bg-blue-600 hover:bg-blue-500 active:scale-[0.99] text-white py-3 rounded-2xl font-bold text-xs shadow-md transition duration-150">
+                            💾 確認並儲存本期紀錄 (同時存照片)
+                        </button>
+                        <!-- LINE 傳送 -->
+                        <div class="flex gap-2">
+                            <button type="button" onclick="sendToLine('${room}')" class="flex-1 bg-[#06c755] hover:bg-[#05b34c] active:scale-[0.99] text-white py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow transition duration-150">
+                                <span>🟢</span> 傳送 LINE 帳單與相片
+                            </button>
+                            <button type="button" onclick="copyBillText('${room}')" class="bg-slate-700 hover:bg-slate-600 active:scale-[0.99] text-slate-200 py-2.5 px-3 rounded-xl font-bold text-xs transition duration-150" title="複製帳單文字">
+                                📋 複製
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 歷史紀錄表格：房租水電紀錄 -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <h4 class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                            <span>📋</span> 房租水電紀錄 (含照片查驗)
+                        </h4>
+                        <button type="button" onclick="confirmClearHistory('${room}')" class="text-[11px] text-red-500 hover:text-red-700 font-medium underline">
+                            清空此房
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="text-slate-400 border-b border-slate-100 bg-slate-50/60 text-[10px] sm:text-[11px]">
+                                <tr>
+                                    <th class="py-2 px-1 font-semibold text-center">租期(月/日)</th>
+                                    <th class="py-2 px-1 font-semibold text-right">租金</th>
+                                    <th class="py-2 px-1 font-semibold text-right">度數</th>
+                                    <th class="py-2 px-1 font-semibold text-right">水費</th>
+                                    <th class="py-2 px-1 font-semibold text-right text-emerald-600">總額</th>
+                                    <th class="py-2 px-1 text-center w-12">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyBody-${room}" class="divide-y divide-slate-100 font-medium">
+                                <!-- 動態填入歷史資料 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            container.appendChild(section);
+            renderRoomHistory(room);
+        });
+    }
+
+    function switchTab(tab) {
+        currentActiveTab = tab;
+        roomKeys.forEach(room => {
+            const btn = document.getElementById(`nav-${room}`);
+            const page = document.getElementById(`roomPage-${room}`);
+            if (btn && page) {
+                if (room === tab) {
+                    btn.className = "px-3.5 py-1.5 rounded-xl font-bold text-xs transition duration-200 bg-blue-600 text-white shadow-sm";
+                    page.classList.remove('hidden');
+                } else {
+                    btn.className = "px-3.5 py-1.5 rounded-xl font-bold text-xs transition duration-200 text-slate-300 hover:text-white hover:bg-slate-800";
+                    page.classList.add('hidden');
+                }
+            }
+        });
+
+        const navSum = document.getElementById('nav-summary');
+        const viewSum = document.getElementById('summaryView');
+        const dateCard = document.getElementById('globalDateCard');
+
+        if (tab === 'summary') {
+            navSum.className = "px-3 py-1.5 rounded-xl font-bold text-xs transition duration-200 bg-emerald-600 text-white shadow-sm flex items-center gap-1";
+            viewSum.classList.remove('hidden');
+            dateCard.classList.add('hidden');
+            renderSummaryTable();
+        } else {
+            navSum.className = "px-3 py-1.5 rounded-xl font-bold text-xs transition duration-200 text-emerald-400 hover:text-emerald-300 hover:bg-slate-800 flex items-center gap-1";
+            viewSum.classList.add('hidden');
+            dateCard.classList.remove('hidden');
+        }
+    }
+
+    function promptMediaChoice(room, targetField) {
+        pendingRoomForMedia = room;
+        pendingTargetField = targetField;
+        const modal = document.getElementById('mediaSourceModal');
+        const desc = document.getElementById('mediaSourceModalDesc');
+        desc.innerText = `準備辨識 ${room} 號房的【${targetField === 'curr' ? '本期電表度數 (新)' : '前期電表度數 (舊)'}】，請選擇：`;
+        modal.classList.remove('hidden');
+    }
+
+    function closeMediaSourceModal() {
+        const modal = document.getElementById('mediaSourceModal');
+        if (modal) modal.classList.add('hidden');
+    }
+
+    function chooseSourceAndOpen(sourceType) {
+        closeMediaSourceModal();
+        if (sourceType === 'camera') {
+            const input = document.getElementById('appCameraInput');
+            input.value = '';
+            input.click();
+        } else {
+            const input = document.getElementById('appGalleryInput');
+            input.value = '';
+            input.click();
+        }
+    }
+
+    async function handleImageSelected(inputElement) {
+        if (!inputElement.files || inputElement.files.length === 0) return;
+        const file = inputElement.files[0];
+        const room = pendingRoomForMedia || currentActiveTab;
+        const isPrev = (pendingTargetField === 'prev');
+
+        const previewCard = document.getElementById(`photoPreviewCard-${room}`);
+        const thumbImg = document.getElementById(`meterThumb-${room}`);
+        const badge = document.getElementById(`aiConfidence-${room}`);
+        const fileNameEl = document.getElementById(`meterFileName-${room}`);
+
+        showToast('正在優化照片並交由 AI 辨識...', '⏳');
+
+        try {
+            // 前端進行圖片等比壓縮
+            const compressedBase64 = await compressImage(file, 1280, 0.85);
+
+            if (thumbImg) thumbImg.src = `data:image/jpeg;base64,${compressedBase64}`;
+            if (previewCard) previewCard.classList.remove('hidden');
+            if (badge) badge.innerText = '辨識中...';
+
+            if (!roomActivePhotos[room]) roomActivePhotos[room] = { curr: null, prev: null };
+            roomActivePhotos[room][isPrev ? 'prev' : 'curr'] = compressedBase64;
+
+            // 呼叫 Gemini AI 進行電錶度數判讀
+            const recognizedReading = await recognizeMeterReading(room, compressedBase64);
+
+            if (recognizedReading !== null && !isNaN(recognizedReading)) {
+                if (isPrev) {
+                    document.getElementById(`prevDegree-${room}`).value = recognizedReading;
+                    showToast(`已成功辨識前期度數：${recognizedReading} 度`, '✅');
+                } else {
+                    document.getElementById(`currDegree-${room}`).value = recognizedReading;
+                    showToast(`已成功辨識本期度數：${recognizedReading} 度`, '✅');
+                }
+                if (badge) badge.innerText = `辨識為 ${recognizedReading} 度`;
+                if (fileNameEl) fileNameEl.innerText = `${isPrev ? '前期' : '本期'}照片已就緒，按下方儲存將自動存檔`;
+                recalculateRoom(room);
+            } else {
+                if (badge) badge.innerText = '辨識未確認';
+                showToast('未能辨識出清晰數字，請手動微調度數', '⚠️');
+            }
+        } catch (err) {
+            console.error('辨識流程失敗:', err);
+            showToast('辨識過程出錯，請手動填寫度數', '❌');
+            if (badge) badge.innerText = '辨識失敗';
+        }
+    }
+
+    function compressImage(file, maxDimension = 1280, quality = 0.85) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    let w = img.width;
+                    let h = img.height;
+                    if (w > maxDimension || h > maxDimension) {
+                        if (w > h) {
+                            h = Math.round((h * maxDimension) / w);
+                            w = maxDimension;
+                        } else {
+                            w = Math.round((w * maxDimension) / h);
+                            h = maxDimension;
+                        }
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    
+                    const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    const base64Data = dataUrl.split(',')[1];
+                    resolve(base64Data);
+                };
+                img.onerror = reject;
+                img.src = e.target.result;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    async function recognizeMeterReading(room, base64ImageData) {
+        const apiKey = localApiKey || "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+        const promptText = `你是一個專業的台灣出租套房電錶判讀專家。
+請仔細辨識這張相片中電錶（指針式、滾輪數字式或液晶數位式）的度數。
+規則：
+1. 僅返回電錶上的有效數字。若有紅框或最後一位小數，請加上小數點（如 5678.2）；若無法確定小數，返回整數（如 5678）。
+2. 請嚴格只輸出 JSON 格式，不要有 Markdown 標籤，格式如下：
+{"reading": 5678.2}`;
+
+        const payload = {
+            contents: [
+                {
+                    role: "user",
+                    parts: [
+                        { text: promptText },
+                        { inlineData: { mimeType: "image/jpeg", data: base64ImageData } }
+                    ]
+                }
+            ],
+            generationConfig: { responseMimeType: "application/json" }
+        };
+
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) throw new Error(`API 回應失敗: HTTP ${response.status}`);
+        const data = await response.json();
+        const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!jsonText) return null;
+
+        try {
+            const parsed = JSON.parse(jsonText);
+            return typeof parsed.reading === 'number' ? parsed.reading : parseFloat(parsed.reading);
+        } catch (e) {
+            const match = jsonText.match(/(\d+(\.\d+)?)/);
+            return match ? parseFloat(match[1]) : null;
+        }
+    }
+
+    function adjustDegree(room, delta) {
+        const input = document.getElementById(`currDegree-${room}`);
+        let current = parseFloat(input.value);
+        if (isNaN(current)) current = 0;
+        current = Math.round((current + delta) * 10) / 10;
+        input.value = current;
+        recalculateRoom(room);
+    }
+
+    function calculateRoomData(room) {
+        const prevInput = parseFloat(document.getElementById(`prevDegree-${room}`)?.value);
+        const currInput = parseFloat(document.getElementById(`currDegree-${room}`)?.value);
+        const prev = isNaN(prevInput) ? 0 : prevInput;
+        const curr = isNaN(currInput) ? 0 : currInput;
+
+        let used = (curr >= prev) ? (curr - prev) : 0;
+        used = Math.round(used * 10) / 10;
+
+        const rate = (room === '202') ? get202Rate() : 5.5;
+        const elecPay = Math.round(used * rate);
+
+        return { prev, curr, used, rate, elecPay };
+    }
+
+    function recalculateRoom(room) {
+        const calc = calculateRoomData(room);
+        const usedSpan = document.getElementById(`usedDegrees-${room}`);
+        const totalSpan = document.getElementById(`totalElecPay-${room}`);
+        if (usedSpan) usedSpan.innerText = calc.used.toFixed(1);
+        if (totalSpan) totalSpan.innerText = formatNumber(calc.elecPay);
+    }
+
+    function saveRoomRecord(room) {
+        const calc = calculateRoomData(room);
+        if (calc.curr === 0 && calc.prev === 0) {
+            showToast('請先填寫或拍照辨識電錶度數！', '⚠️');
+            return;
+        }
+
+        const rStart = document.getElementById(`rentStart-${room}`).value;
+        const rEnd = document.getElementById(`rentEnd-${room}`).value;
+        const globalEndDate = document.getElementById('globalEndDate').value;
+
+        // 產生儲存物件 (包含相片)
+        const newRecord = {
+            id: Date.now(),
+            rentStart: rStart,
+            rentEnd: rEnd,
+            meterDate: globalEndDate,
+            prevDegree: calc.prev,
+            currDegree: calc.curr,
+            usedDegrees: calc.used.toFixed(1),
+            rate: calc.rate,
+            elecPay: calc.elecPay,
+            currPhoto: roomActivePhotos[room]?.curr || null,
+            prevPhoto: roomActivePhotos[room]?.prev || null
+        };
+
+        // 儲存至記憶體與 localStorage
+        roomStore[room].history.unshift(newRecord);
+        persistStore(room);
+        renderRoomHistory(room);
+
+        // 儲存後清空該次暫存照片
+        if (roomActivePhotos[room]) {
+            roomActivePhotos[room].curr = null;
+        }
+        
+        // 隱藏預覽
+        const previewCard = document.getElementById(`photoPreviewCard-${room}`);
+        if(previewCard) previewCard.classList.add('hidden');
+
+        // 自動推算下一期租賃區間，無縫接軌下個月
+        if (rEnd) {
+            const endD = new Date(rEnd);
+            const nextStart = new Date(endD);
+            nextStart.setDate(nextStart.getDate() + 1);
+            
+            const nextEnd = new Date(nextStart);
+            nextEnd.setMonth(nextEnd.getMonth() + 1);
+            nextEnd.setDate(nextEnd.getDate() - 1);
+            
+            const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            
+            roomStore[room].rentStart = fmt(nextStart);
+            roomStore[room].rentEnd = fmt(nextEnd);
+            
+            document.getElementById(`rentStart-${room}`).value = roomStore[room].rentStart;
+            document.getElementById(`rentEnd-${room}`).value = roomStore[room].rentEnd;
+        }
+
+        showToast('本期紀錄已儲存成功！', '💾');
+    }
+
+    function renderRoomHistory(room) {
+        const history = roomStore[room].history;
+        const tbody = document.getElementById(`historyBody-${room}`);
+        const roomConfig = roomRentConfigs[room] || { rent: 6500, defaultWater: 100 };
+
+        if (!tbody) return;
+
+        if (!history || history.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-slate-400 font-normal text-xs">尚無歷史紀錄</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = '';
+        history.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.className = 'border-b border-slate-50 hover:bg-slate-50/60 transition';
+            
+            // 處理租賃期間為 月/日 格式 (09/06~10/06)
+            const startShort = item.rentStart ? item.rentStart.substring(5).replace('-', '/') : '';
+            const endShort = item.rentEnd ? item.rentEnd.substring(5).replace('-', '/') : '';
+            const rentPeriod = (startShort && endShort) ? `${startShort}~${endShort}` : '-';
+            
+            // 取得各項金額
+            const rent = roomConfig.rent;
+            const water = roomConfig.defaultWater;
+            const elec = Number(item.elecPay) || 0;
+            const total = rent + water + elec;
+
+            // 操作按鈕區塊
+            const photoBtn = item.currPhoto 
+                ? `<button type="button" onclick="viewMeterPhoto('${room}', ${item.id})" class="text-[12px] px-2 py-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition flex items-center justify-center font-bold shadow-sm" title="查看相片">📸 查照片</button>`
+                : `<span class="text-[10px] text-slate-400 bg-slate-50 px-2 py-1 rounded-lg">無照片</span>`;
+            
+            const deleteBtn = `<button type="button" onclick="confirmDeleteSingleRecord('${room}', ${item.id})" class="text-[12px] p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition flex items-center justify-center" title="刪除紀錄">🗑️</button>`;
+
+            tr.innerHTML = `
+                <td class="py-2.5 px-1 text-[11px] font-mono text-slate-700 font-medium whitespace-nowrap text-center">${rentPeriod}</td>
+                <td class="py-2.5 px-1 text-[11px] font-mono text-slate-600 text-right">$${formatNumber(rent)}</td>
+                <td class="py-2.5 px-1 text-[11px] font-mono text-slate-800 font-bold text-right">${item.usedDegrees}</td>
+                <td class="py-2.5 px-1 text-[11px] font-mono text-cyan-600 text-right">$${formatNumber(water)}</td>
+                <td class="py-2.5 px-1 text-[11px] font-mono text-emerald-600 font-bold text-right bg-emerald-50/30">$${formatNumber(total)}</td>
+                <td class="py-2.5 px-1 text-center">
+                    <div class="flex items-center justify-center gap-1">
+                        ${photoBtn}
+                        ${deleteBtn}
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function viewMeterPhoto(room, recordId) {
+        const history = roomStore[room]?.history || [];
+        const record = history.find(item => item.id === recordId);
+        if (!record || !record.currPhoto) {
+            showToast('此筆紀錄未存有電錶相片', '⚠️');
+            return;
+        }
+
+        const modal = document.getElementById('photoViewerModal');
+        const title = document.getElementById('photoViewerTitle');
+        const subtitle = document.getElementById('photoViewerSubtitle');
+        const img = document.getElementById('photoViewerImg');
+        const degrees = document.getElementById('photoViewerDegrees');
+
+        title.innerText = `${room} 號套房電錶紀錄相片`;
+        subtitle.innerText = `抄表日：${record.meterDate || '無'} ｜ 租期：${record.rentStart || ''} ~ ${record.rentEnd || ''}`;
+        img.src = `data:image/jpeg;base64,${record.currPhoto}`;
+        degrees.innerText = `${record.currDegree || record.usedDegrees} 度 (實用 ${record.usedDegrees} 度 / $${formatNumber(record.elecPay)} 元)`;
+
+        modal.classList.remove('hidden');
+    }
+
+    function closePhotoViewerModal() {
+        const modal = document.getElementById('photoViewerModal');
+        if (modal) modal.classList.add('hidden');
+    }
+
+    function renderSummaryTable() {
+        const tbody = document.getElementById('summaryTableBody');
+        const tfoot = document.getElementById('summaryTableFoot');
+        const yearSpan = document.getElementById('summaryYearText');
+        tbody.innerHTML = '';
+        if (tfoot) tfoot.innerHTML = '';
+
+        const globalDate = document.getElementById('globalEndDate').value;
+        const currentYear = globalDate ? globalDate.split('-')[0] : new Date().getFullYear();
+        if (yearSpan) yearSpan.innerText = `${currentYear} 年`;
+
+        let grandElec = 0;
+        let grandWater = 0;
+        let grandTotal = 0;
+
+        roomKeys.forEach(room => {
+            const history = roomStore[room]?.history;
+            const roomConfig = roomRentConfigs[room] || { rent: 6500, defaultWater: 100 };
+            const rentBase = roomConfig.rent;
+            const waterFee = roomConfig.defaultWater;
+
+            const tr = document.createElement('tr');
+            tr.className = 'border-b border-slate-50 even:bg-slate-50/50 hover:bg-blue-50/40 transition duration-150';
+
+            if (history && history.length > 0) {
+                const latest = history[0];
+                const elecPay = Number(latest.elecPay) || 0;
+                const totalPay = rentBase + waterFee + elecPay;
+
+                grandElec += elecPay;
+                grandWater += waterFee;
+                grandTotal += totalPay;
+
+                const startShort = latest.rentStart ? latest.rentStart.substring(5).replace('-', '/') : '';
+                const endShort = latest.rentEnd ? latest.rentEnd.substring(5).replace('-', '/') : '';
+                const rentPeriodDisplay = (startShort && endShort) ? `${startShort}~${endShort}` : '';
+
+                tr.innerHTML = `
+                    <td class="py-2.5 px-1 font-bold text-slate-800 font-mono text-center">${room}</td>
+                    <td class="py-2.5 px-1 text-[10px] text-slate-600 font-mono text-center whitespace-nowrap">${rentPeriodDisplay}</td>
+                    <td class="py-2.5 px-1 text-right font-mono text-blue-600 font-bold">$${formatNumber(elecPay)}</td>
+                    <td class="py-2.5 px-1 text-right font-mono text-cyan-600 font-bold">$${formatNumber(waterFee)}</td>
+                    <td class="py-2.5 px-1.5 text-right font-mono font-black text-emerald-600 bg-emerald-50/30">$${formatNumber(totalPay)}</td>
+                `;
+            } else {
+                const totalPay = rentBase + waterFee;
+                grandWater += waterFee;
+                grandTotal += totalPay;
+
+                tr.innerHTML = `
+                    <td class="py-2.5 px-1 font-bold text-slate-800 font-mono text-center">${room}</td>
+                    <td class="py-2.5 px-1 text-[10px] text-slate-400 font-mono text-center italic">無紀錄</td>
+                    <td class="py-2.5 px-1 text-right font-mono text-slate-300">-</td>
+                    <td class="py-2.5 px-1 text-right font-mono text-cyan-600 font-bold">$${formatNumber(waterFee)}</td>
+                    <td class="py-2.5 px-1.5 text-right font-mono font-bold text-slate-500 bg-slate-50/50">$${formatNumber(totalPay)}</td>
+                `;
+            }
+            tbody.appendChild(tr);
+        });
+
+        if (tfoot) {
+            tfoot.innerHTML = `
+                <tr>
+                    <td class="py-3 px-1 text-slate-700 font-bold text-center" colspan="2">合計總收</td>
+                    <td class="py-3 px-1 text-right font-mono font-black text-blue-700">$${formatNumber(grandElec)}</td>
+                    <td class="py-3 px-1 text-right font-mono font-black text-cyan-700">$${formatNumber(grandWater)}</td>
+                    <td class="py-3 px-1.5 text-right font-mono font-black text-emerald-700 text-sm bg-emerald-100/50 rounded-br-xl">$${formatNumber(grandTotal)}</td>
+                </tr>
+            `;
+        }
+    }
+
+    function generateSummaryText() {
+        const globalDate = document.getElementById('globalEndDate').value;
+        const currentYear = globalDate ? globalDate.split('-')[0] : new Date().getFullYear();
+        
+        let msg = `📊 ${currentYear} 年 最新租金水電總覽\n---------------------------\n`;
+        let grandElec = 0; let grandWater = 0; let grandTotal = 0;
+
+        roomKeys.forEach(room => {
+            const history = roomStore[room]?.history;
+            const roomConfig = roomRentConfigs[room] || { rent: 6500, defaultWater: 100 };
+            const rentBase = roomConfig.rent;
+            const waterFee = roomConfig.defaultWater;
+
+            if (history && history.length > 0) {
+                const latest = history[0];
+                const elecPay = Number(latest.elecPay) || 0;
+                const totalPay = rentBase + waterFee + elecPay;
+                
+                grandElec += elecPay; grandWater += waterFee; grandTotal += totalPay;
+
+                const startShort = latest.rentStart ? latest.rentStart.substring(5).replace('-', '/') : '';
+                const endShort = latest.rentEnd ? latest.rentEnd.substring(5).replace('-', '/') : '';
+                const rentPeriod = (startShort && endShort) ? `(${startShort}~${endShort})` : '';
+                
+                msg += `【${room}房】$${formatNumber(totalPay)} ${rentPeriod}\n`;
+                msg += ` ↳ 租金$${formatNumber(rentBase)} + 水費$${formatNumber(waterFee)} + 電費$${formatNumber(elecPay)}\n`;
+            } else {
+                const totalPay = rentBase + waterFee;
+                grandWater += waterFee; grandTotal += totalPay;
+                msg += `【${room}房】$${formatNumber(totalPay)} (尚未抄表)\n`;
+            }
+        });
+        
+        msg += `---------------------------\n`;
+        msg += `⚡ 總收電費: $${formatNumber(grandElec)}\n`;
+        msg += `💧 總收水費: $${formatNumber(grandWater)}\n`;
+        msg += `💰 合計總收: $${formatNumber(grandTotal)}\n`;
+        msg += `---------------------------`;
+        return msg;
+    }
+
+    async function captureSummaryImage() {
+        const element = document.getElementById('summaryCaptureArea');
+        const originalWidth = element.style.width;
+        element.style.width = 'max-content';
+        const canvas = await html2canvas(element, { 
+            scale: 2.5,
+            backgroundColor: '#ffffff',
+            useCORS: true,
+            windowWidth: element.scrollWidth,
+            width: element.scrollWidth
+        });
+        element.style.width = originalWidth;
+        return canvas;
+    }
+
+    async function shareSummaryImage() {
+        showToast('正在產生圖表...', '⏳');
+        try {
+            const canvas = await captureSummaryImage();
+            const msg = generateSummaryText();
+            copyTextFallback(msg);
+
+            canvas.toBlob(async (blob) => {
+                const dateStr = document.getElementById('globalEndDate').value || new Date().toISOString().split('T')[0];
+                const file = new File([blob], `總覽報表_${dateStr}.png`, { type: 'image/png' });
+
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({ title: `套房租金水電總覽`, text: msg, files: [file] });
+                        showToast('已完成分享！', '✅');
+                    } catch (e) {
+                        if (e.name !== 'AbortError') throw e;
+                    }
+                } else {
+                    downloadSummaryImageCanvas(canvas);
+                    showToast('圖表已自動下載，即將開啟 LINE！', '🟢');
+                    const lineUrl = `https://line.me/R/share?text=${encodeURIComponent(msg)}`;
+                    window.open(lineUrl, '_blank');
+                }
+            }, 'image/png');
+        } catch (err) {
+            console.error('產生圖表失敗', err);
+            showToast('圖表產生失敗，改為純文字複製', '⚠️');
+            copySummaryText();
+        }
+    }
+
+    async function downloadSummaryImage() {
+        showToast('正在產生圖表...', '⏳');
+        try {
+            const canvas = await captureSummaryImage();
+            downloadSummaryImageCanvas(canvas);
+            showToast('圖表已下載！', '📥');
+        } catch (err) {
+            showToast('下載圖表失敗', '❌');
+        }
+    }
+
+    function downloadSummaryImageCanvas(canvas) {
+        const dateStr = document.getElementById('globalEndDate').value || new Date().toISOString().split('T')[0];
+        const url = canvas.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `總覽報表_${dateStr}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    function copySummaryText() {
+        const msg = generateSummaryText();
+        copyTextFallback(msg);
+        showToast('報表已複製到剪貼簿！', '📋');
+    }
+
+    function base64ToFile(base64Data, filename = 'meter.jpg') {
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        return new File([byteArray], filename, { type: 'image/jpeg' });
+    }
+
+    function downloadBase64Photo(base64Data, filename) {
+        const a = document.createElement('a');
+        a.href = `data:image/jpeg;base64,${base64Data}`;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    async function sendToLine(room) {
+        let msg = roomBillMessages[room];
+        if (!msg) {
+            const calc = calculateRoomData(room);
+            const rStart = document.getElementById(`rentStart-${room}`).value;
+            const rEnd = document.getElementById(`rentEnd-${room}`).value;
+            const globalEndDate = document.getElementById('globalEndDate').value;
+            const roomConfig = roomRentConfigs[room] || { rent: 6500, defaultWater: 100 };
+            const totalPay = roomConfig.rent + roomConfig.defaultWater + calc.elecPay;
+            msg = `⚡ ${room} 房本月房租水電費明細\n---------------------------\n【租賃期間】${rStart} ~ ${rEnd}\n【抄表日期】${globalEndDate}\n【前期度數】${calc.prev.toFixed(1)} 度 (舊)\n【本期度數】${calc.curr.toFixed(1)} 度 (新)\n【實用度數】${calc.used.toFixed(1)} 度\n【計費費率】${calc.rate.toFixed(1)} 元 / 度\n---------------------------\n🏠【房屋租金】NT$ ${formatNumber(roomConfig.rent)}\n💧【自來水費】NT$ ${formatNumber(roomConfig.defaultWater)}\n⚡【本期電費】NT$ ${formatNumber(calc.elecPay)}\n---------------------------\n💰【應繳總額】NT$ ${formatNumber(totalPay)}\n---------------------------\n*(請核對明細無誤後繳納，謝謝您！)*`;
+        }
+
+        copyTextFallback(msg); // LINE吃掉文字防呆機制：自動複製
+        const photoBase64 = roomActivePhotos[room]?.curr || roomStore[room]?.history?.[0]?.currPhoto;
+
+        if (photoBase64) {
+            try {
+                const photoFile = base64ToFile(photoBase64, `${room}房電錶照片_${document.getElementById('globalEndDate').value || '最新'}.jpg`);
+                if (navigator.canShare && navigator.canShare({ files: [photoFile] })) {
+                    showToast('帳單已複製，請在分享選單貼上發送！', '🟢');
+                    await navigator.share({ title: `${room} 房明細`, text: msg, files: [photoFile] });
+                    return;
+                }
+            } catch (err) {
+                if (err.name === 'AbortError') return;
+            }
+            
+            downloadBase64Photo(photoBase64, `${room}房電錶照片.jpg`);
+            showToast('已複製帳單並儲存相片，請於 LINE 貼上！', '🟢');
+            setTimeout(() => {
+                window.open(`https://line.me/R/share?text=${encodeURIComponent(msg)}`, '_blank');
+            }, 500);
+        } else {
+            window.open(`https://line.me/R/share?text=${encodeURIComponent(msg)}`, '_blank');
+            showToast('已開啟 LINE 傳送', '🟢');
+        }
+    }
+
+    function copyBillText(room) {
+        let msg = roomBillMessages[room];
+        if (!msg) {
+            const calc = calculateRoomData(room);
+            const rStart = document.getElementById(`rentStart-${room}`).value;
+            const rEnd = document.getElementById(`rentEnd-${room}`).value;
+            const globalEndDate = document.getElementById('globalEndDate').value;
+            const roomConfig = roomRentConfigs[room] || { rent: 6500, defaultWater: 100 };
+            const totalPay = roomConfig.rent + roomConfig.defaultWater + calc.elecPay;
+            msg = `⚡ ${room} 房本月房租水電費明細\n---------------------------\n【租賃期間】${rStart} ~ ${rEnd}\n【抄表日期】${globalEndDate}\n【前期度數】${calc.prev.toFixed(1)} 度 (舊)\n【本期度數】${calc.curr.toFixed(1)} 度 (新)\n【實用度數】${calc.used.toFixed(1)} 度\n【計費費率】${calc.rate.toFixed(1)} 元 / 度\n---------------------------\n🏠【房屋租金】NT$ ${formatNumber(roomConfig.rent)}\n💧【自來水費】NT$ ${formatNumber(roomConfig.defaultWater)}\n⚡【本期電費】NT$ ${formatNumber(calc.elecPay)}\n---------------------------\n💰【應繳總額】NT$ ${formatNumber(totalPay)}\n---------------------------\n*(請核對明細無誤後繳納，謝謝您！)*`;
+        }
+        copyTextFallback(msg);
+        showToast('帳單明細已複製到剪貼簿！', '📋');
+    }
+
+    function copyTextFallback(text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(textarea);
+    }
+
+    function persistStore(room) {
+        localStorage.setItem(`${dbKeyPrefix}${room}`, JSON.stringify(roomStore[room].history));
+    }
+
+    let deleteCallback = null;
+    function openDeleteModal(title, desc, onConfirm) {
+        document.getElementById('deleteConfirmTitle').innerText = title;
+        document.getElementById('deleteConfirmDesc').innerText = desc;
+        deleteCallback = onConfirm;
+        document.getElementById('deleteConfirmModal').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteConfirmModal').classList.add('hidden');
+        deleteCallback = null;
+    }
+
+    document.getElementById('deleteConfirmBtn').onclick = function() {
+        if (typeof deleteCallback === 'function') deleteCallback();
+        closeDeleteModal();
+    };
+
+    function confirmDeleteSingleRecord(room, recordId) {
+        openDeleteModal('確定刪除這筆紀錄？', '刪除後該次帳單度數與相片將無法復原。', () => {
+            roomStore[room].history = roomStore[room].history.filter(item => item.id !== recordId);
+            persistStore(room);
+            renderRoomHistory(room);
+            showToast('已刪除該筆紀錄', '🗑️');
+        });
+    }
+
+    function confirmClearHistory(room) {
+        openDeleteModal(`確定清空 ${room} 房的所有歷史紀錄？`, '此房所有歷史紀錄與照片將全部移除。', () => {
+            roomStore[room].history = [];
+            persistStore(room);
+            renderRoomHistory(room);
+            showToast(`已清空 ${room} 房紀錄`, '🗑️');
+        });
+    }
+
+    function openApiKeyModal() {
+        document.getElementById('apiKeyModal').classList.remove('hidden');
+    }
+
+    function closeApiKeyModal() {
+        document.getElementById('apiKeyModal').classList.add('hidden');
+    }
+
+    function saveApiKey() {
+        const key = document.getElementById('apiKeyInput').value.trim();
+        localApiKey = key;
+        localStorage.setItem('gemini_api_key', key);
+        closeApiKeyModal();
+        showToast('API Key 已儲存至裝置！', '🔑');
+    }
+
+    let toastTimer = null;
+    function showToast(message, icon = 'ℹ️') {
+        const toast = document.getElementById('toast');
+        const msgEl = document.getElementById('toastMsg');
+        const iconEl = document.getElementById('toastIcon');
+        msgEl.innerText = message; iconEl.innerText = icon;
+        toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-3');
+        toast.classList.add('opacity-100', 'translate-y-0');
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+            toast.classList.remove('opacity-100', 'translate-y-0');
+            toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-3');
+        }, 2600);
+    }
+    </script>
 </body>
 </html>
